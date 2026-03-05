@@ -8,7 +8,7 @@ import {
   wf_gate_run,
 } from "../tools/gate-tools";
 import { wf_state_read, wf_state_write } from "../tools/state-tools";
-import { GOVERNED_STAGES, STAGE_ORDER, type StageId } from "../types";
+import { STAGE_ORDER, type StageId } from "../types";
 
 const TEST_DIR = join(import.meta.dir, "__e2e_workdir__");
 const PASS_GATE_SCRIPT = join(import.meta.dir, "fixtures", "gate-pass.sh");
@@ -132,6 +132,23 @@ describe("runtime stage-exit contract", () => {
         stage_id: "discover",
         gate_name: "discover-gate",
         command: passGateCommand,
+      },
+      ctx
+    );
+
+    const discoverWithoutApproval = asJson(
+      await wf_state_write.execute(
+        { feature_id: featureId, stage_id: "discover", action: "complete" },
+        ctx
+      )
+    );
+    expect(discoverWithoutApproval.error).toContain("Stage exit contract failed");
+
+    await wf_hr_record.execute(
+      {
+        feature_id: featureId,
+        stage_id: "discover",
+        decision: "approved",
       },
       ctx
     );
@@ -280,19 +297,17 @@ describe("e2e pipeline with fixtures", () => {
       );
       expect(gateResult.status).toBe("passed");
 
-      if (GOVERNED_STAGES.includes(stageId)) {
-        const approvalResult = asJson(
-          await wf_hr_record.execute(
-            {
-              feature_id: featureId,
-              stage_id: stageId,
-              decision: "approved",
-            },
-            ctx
-          )
-        );
-        expect(approvalResult.success).toBe(true);
-      }
+      const approvalResult = asJson(
+        await wf_hr_record.execute(
+          {
+            feature_id: featureId,
+            stage_id: stageId,
+            decision: "approved",
+          },
+          ctx
+        )
+      );
+      expect(approvalResult.success).toBe(true);
 
       const completeResult = asJson(
         await wf_state_write.execute(

@@ -112,9 +112,10 @@ Record gates:
 
 ### Step 8: Register and Complete
 
-1. Call `wf_artifact_register` for `dispatch-plan.md`.
-2. Call `wf_state_write` with action `"complete"` for stage `"dispatch"`.
-3. Tell user: "Dispatch plan ready. Next: run `/wf.implement`."
+1. Call `wf_dispatch_build` to generate deterministic runtime plan artifacts.
+2. Register `dispatch-plan.md` and generated artifacts with `wf_artifact_register`.
+3. Call `wf_state_write` with action `"complete"` for stage `"dispatch"`.
+4. Tell user: "Dispatch plan ready. Next: run `/wf.implement`."
 
 ### Quality Rules
 

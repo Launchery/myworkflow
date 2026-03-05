@@ -60,6 +60,6 @@ describe("state helpers", () => {
     expect(stage.finished_at).toBeNull();
     expect(stage.artifacts).toEqual([]);
     expect(stage.gates).toEqual([]);
-    expect(stage.approval.decision).toBe("not_required");
+    expect(stage.approval.decision).toBe("pending");
   });
 });

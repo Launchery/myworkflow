@@ -67,7 +67,7 @@ export function newStageExecution(stageId: StageId): StageExecution {
     artifacts: [],
     gates: [],
     approval: {
-      decision: "not_required",
+      decision: "pending",
       reviewer: "",
       timestamp: "",
       notes: "",

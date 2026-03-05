@@ -1,4 +1,5 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   "command": {
     "wf.discover": {
       "template": "Execute Stage 1: Discovery. Load and follow the wf-discover skill. Use wf_state_read to check state first. If no active feature exists, use wf_feature_init to create one. Then conduct a deep discovery interview to produce project-concept.md.",
@@ -29,11 +30,11 @@
       "description": "Stage 7: Tooling — stack inference, research, setup, verify"
     },
     "wf.dispatch": {
-      "template": "Execute Stage 8: Dispatch. Load and follow the wf-dispatch skill. Use wf_state_read to check state. Analyze task passports and create dispatch plan with parallelism strategy.",
+      "template": "Execute Stage 8: Dispatch. Load and follow the wf-dispatch skill. Use wf_state_read to check state. Analyze task passports and create dispatch plan with parallelism strategy. Use wf_dispatch_build to generate deterministic runtime waves and save dispatch-plan.generated artifacts.",
       "description": "Stage 8: Dispatch — plan subagent task execution"
     },
     "wf.implement": {
-      "template": "Execute Stage 9: Implement. Load and follow the wf-implement skill. Use wf_state_read to check state. Execute SDD+TDD: dispatch subagents by task passports, enforce test-first and mandatory gates.",
+      "template": "Execute Stage 9: Implement. Load and follow the wf-implement skill. Use wf_state_read to check state. Initialize deterministic runner via wf_runner_init, claim tasks with wf_runner_next, update task outcomes with wf_runner_mark, and monitor progress with wf_runner_status. Execute SDD+TDD per task and enforce mandatory gates.",
       "description": "Stage 9: Implement — SDD+TDD execution via subagents"
     },
     "wf.review": {

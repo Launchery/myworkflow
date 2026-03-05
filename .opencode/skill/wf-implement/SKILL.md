@@ -33,6 +33,12 @@ Record gate `implementation-readiness`.
 
 Follow `dispatch-plan.md` wave order exactly.
 
+Use deterministic runtime runner tools:
+- `wf_runner_init` to initialize runner state from generated dispatch plan
+- `wf_runner_next` to claim next runnable tasks in deterministic order
+- `wf_runner_mark` to mark each claimed task as completed/failed/skipped
+- `wf_runner_status` to inspect progress and wave state
+
 For each task:
 1. Read full passport.
 2. Dispatch subagent with full task payload (do not ask subagent to open plan file blindly).
@@ -51,8 +57,8 @@ For parallel waves:
 ### Step 4: Gate Verification Per Task
 
 After each task execution:
-- run each gate command from task passport
-- record each result using `wf_gate_record`
+- run each gate command from task passport using `wf_gate_run`
+- record any manual/non-command gate only via `wf_gate_record`
 - map gate evidence to task id in notes
 
 If a task fails gate checks:

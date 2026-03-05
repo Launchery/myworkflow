@@ -1,4 +1,3 @@
-import { isGovernedStage } from "./gates";
 import type { FeatureRun, StageExecution, StageId } from "./types";
 
 export interface StageExitValidation {
@@ -16,11 +15,14 @@ function hasPassedGateEvidence(stage: StageExecution): boolean {
   );
 }
 
-function hasRequiredApproval(stageId: StageId, stage: StageExecution): boolean {
-  if (!isGovernedStage(stageId)) {
-    return true;
-  }
+function hasRecordedHrOutcome(stage: StageExecution): boolean {
+  return (
+    stage.approval.decision === "approved" ||
+    stage.approval.decision === "rejected"
+  );
+}
 
+function hasApprovalToExit(stage: StageExecution): boolean {
   return stage.approval.decision === "approved";
 }
 
@@ -52,9 +54,15 @@ export function validateStageExit(
     );
   }
 
-  if (!hasRequiredApproval(stageId, stage)) {
+  if (!hasRecordedHrOutcome(stage)) {
     errors.push(
-      `Stage '${stageId}' is governed and must be approved before completion.`
+      `Stage '${stageId}' requires a recorded HR outcome (approved/rejected) before completion.`
+    );
+  }
+
+  if (!hasApprovalToExit(stage)) {
+    errors.push(
+      `Stage '${stageId}' must be approved before completion (current: ${stage.approval.decision}).`
     );
   }
 

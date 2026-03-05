@@ -22,7 +22,8 @@ When a stage is marked `complete` via `wf_state_write`, completion is now blocke
 
 1. At least one artifact is registered for the stage.
 2. At least one gate has status `passed` and has an evidence file path.
-3. For governed stages, approval decision is `approved`.
+3. A recorded HR outcome exists for the stage (`approved` or `rejected`).
+4. Completion specifically requires approval decision `approved`.
 
 Enforcement lives in code (not only in skill text):
 - `.opencode/contracts.ts`
@@ -35,7 +36,34 @@ Enforcement lives in code (not only in skill text):
 
 For deterministic quality checks, prefer `wf_gate_run`.
 
+## Deterministic Dispatch and Runner
+
+Runtime deterministic orchestration tools:
+
+- `wf_dispatch_build` - parses YAML passports, infers dependencies, detects output conflicts, generates deterministic waves.
+- `wf_runner_init` - creates runner state from generated dispatch plan.
+- `wf_runner_next` - claims next runnable tasks in deterministic wave order.
+- `wf_runner_mark` - marks claimed tasks as completed/failed/skipped.
+- `wf_runner_status` - returns runner summary and active wave.
+
+`wf_dispatch_build` validates each passport against `workflow/schemas/task-passport.schema.yaml` before wave generation.
+
+## Skill Collision Resolver
+
+- `wf_skill_resolve` inspects local/global skill candidates for a given skill name.
+- If a skill exists in both local and global locations, choose source interactively:
+  - `wf_skill_resolve({ "skill_name": "wf-discover", "choice": "local" })`
+  - `wf_skill_resolve({ "skill_name": "wf-discover", "choice": "global" })`
+- Stored preference is reused by stage command precheck.
+
+Generated artifacts:
+- `workflow/features/<feature-id>/dispatch/dispatch-plan.generated.json`
+- `workflow/features/<feature-id>/dispatch/dispatch-plan.generated.md`
+- `workflow/features/<feature-id>/implement/runner-state.json`
+
 ## Stage Commands (15)
+
+Note: runtime stage completion now requires recorded HR outcome for every stage. The per-stage HR labels below indicate governed-stage transition policy.
 
 ### 1) `/wf.discover`
 - Purpose: discovery interview from raw idea to concept.

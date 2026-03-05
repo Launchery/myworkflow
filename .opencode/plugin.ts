@@ -10,12 +10,21 @@ import {
   wf_hr_record,
 } from "./tools/artifact-tools";
 import { wf_feature_init } from "./tools/feature-tools";
+import {
+  wf_dispatch_build,
+  wf_runner_init,
+  wf_runner_mark,
+  wf_runner_next,
+  wf_runner_status,
+} from "./tools/dispatch-tools";
+import { wf_skill_resolve } from "./tools/skill-tools";
 import { readState, getActiveFeature } from "./state";
 import {
   checkStagePreconditions,
   formatGateCheckResult,
   isGovernedStage,
 } from "./gates";
+import { resolveSkill } from "./skill-resolver";
 import type { StageId } from "./types";
 import { STAGE_ORDER } from "./types";
 
@@ -42,6 +51,12 @@ function textPart(text: string): any {
   return { type: "text", text };
 }
 
+function formatSkillCandidates(candidates: Array<{ source: string; path: string }>): string {
+  return candidates
+    .map((candidate, index) => `${index + 1}. [${candidate.source}] ${candidate.path}`)
+    .join("\n");
+}
+
 const plugin: Plugin = async (input) => {
   return {
     // Register all custom tools
@@ -54,6 +69,12 @@ const plugin: Plugin = async (input) => {
       wf_artifact_register,
       wf_hr_record,
       wf_feature_init,
+      wf_dispatch_build,
+      wf_runner_init,
+      wf_runner_next,
+      wf_runner_mark,
+      wf_runner_status,
+      wf_skill_resolve,
     },
 
     // Intercept /wf.* commands to inject context and check preconditions
@@ -63,6 +84,49 @@ const plugin: Plugin = async (input) => {
       // Only handle workflow stage commands
       const stageId = COMMAND_TO_STAGE[command];
       if (!stageId) return;
+
+      const skillName = `wf-${stageId}`;
+      const skillResolution = await resolveSkill(input.worktree, skillName);
+
+      if (skillResolution.status === "missing") {
+        output.parts = [
+          textPart(
+            [
+              "## Workflow Error: Stage Skill Missing",
+              "",
+              skillResolution.message,
+              "",
+              `Expected skill name: \`${skillName}\``,
+              "Use `wf_skill_resolve` to inspect skill locations and configure preference.",
+            ].join("\n")
+          ),
+        ];
+        return;
+      }
+
+      if (skillResolution.status === "collision") {
+        output.parts = [
+          textPart(
+            [
+              "## Workflow Error: Skill Name Collision",
+              "",
+              skillResolution.message,
+              "",
+              `Skill: \`${skillName}\``,
+              "Candidates:",
+              formatSkillCandidates(skillResolution.candidates),
+              "",
+              "Resolve interactively by selecting one source:",
+              `- \`wf_skill_resolve({ \"skill_name\": \"${skillName}\", \"choice\": \"local\" })\``,
+              `- \`wf_skill_resolve({ \"skill_name\": \"${skillName}\", \"choice\": \"global\" })\``,
+            ].join("\n")
+          ),
+        ];
+        return;
+      }
+
+      const resolvedSkillSource = skillResolution.selected_source ?? "local";
+      const resolvedSkillPath = skillResolution.selected_path ?? "";
 
       const state = await readState(input.worktree);
       const feature = getActiveFeature(state);
@@ -77,6 +141,9 @@ const plugin: Plugin = async (input) => {
               "No active feature found. You must first:",
               "1. Create a feature with `wf_feature_init` tool",
               "2. Or run `/wf.discover` to start a new feature workflow",
+              "",
+              `Resolved stage skill: ${skillName} (${resolvedSkillSource})`,
+              `Skill path: ${resolvedSkillPath}`,
               "",
               `Current state: ${JSON.stringify(state, null, 2)}`,
             ].join("\n")
@@ -94,6 +161,9 @@ const plugin: Plugin = async (input) => {
               "",
               "Starting new feature discovery. No active feature yet.",
               "Use `wf_feature_init` tool to create a feature entry before proceeding.",
+              "",
+              `Resolved stage skill: ${skillName} (${resolvedSkillSource})`,
+              `Skill path: ${resolvedSkillPath}`,
               "",
               `Workflow state: ${JSON.stringify(state, null, 2)}`,
             ].join("\n")
@@ -137,10 +207,13 @@ const plugin: Plugin = async (input) => {
               "",
               `**Feature:** ${feature.feature_id} — ${feature.title}`,
               `**Current Stage:** ${stageId} (${stageIndex + 1}/${STAGE_ORDER.length})`,
-              `**HR Required:** ${governed ? "Yes — must get approval before proceeding" : "No"}`,
+              `**HR Stage Type:** ${governed ? "Governed" : "Standard"}`,
+              "**Stage Exit Approval:** Required for all stages (record approve/reject; completion requires approved)",
               nextStage
                 ? `**Next Stage:** /wf.${nextStage}`
                 : "**Final Stage**",
+              `**Resolved Skill:** ${skillName} (${resolvedSkillSource})`,
+              `**Skill Path:** ${resolvedSkillPath}`,
               "",
               `**Feature Directory:** workflow/features/${feature.feature_id}/${stageId}/`,
               "",
@@ -155,6 +228,12 @@ const plugin: Plugin = async (input) => {
               "- `wf_gate_run` — execute gate command with evidence",
               "- `wf_artifact_register` — register produced artifacts",
               "- `wf_hr_record` — record approval decisions",
+              "- `wf_dispatch_build` — build deterministic task waves",
+              "- `wf_runner_init` — initialize deterministic runner state",
+              "- `wf_runner_next` — claim next runnable tasks",
+              "- `wf_runner_mark` — mark task completed/failed/skipped",
+              "- `wf_runner_status` — inspect runner progress",
+              "- `wf_skill_resolve` — resolve local/global skill collisions",
               "",
               "### Current State",
               "```json",
