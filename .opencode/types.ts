@@ -60,6 +60,9 @@ export interface GateResult {
   status: "passed" | "failed" | "skipped";
   evidence_path: string | null;
   timestamp: string;
+  method?: "run" | "record";
+  command?: string | null;
+  exit_code?: number | null;
 }
 
 export interface ApprovalRecord {

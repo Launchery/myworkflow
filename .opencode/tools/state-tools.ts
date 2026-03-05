@@ -5,6 +5,7 @@ import {
   newStageExecution,
 } from "../state";
 import { isStageId, type StageId } from "../types";
+import { validateStageExit } from "../contracts";
 
 export const wf_state_read = tool({
   description:
@@ -125,6 +126,14 @@ export const wf_state_write = tool({
       if (!stage) {
         return JSON.stringify({
           error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
+        });
+      }
+
+      const validation = validateStageExit(feature, stageId);
+      if (!validation.ok) {
+        return JSON.stringify({
+          error: `Stage exit contract failed for '${stageId}'`,
+          violations: validation.errors,
         });
       }
 

@@ -1,6 +1,10 @@
 import type { Plugin } from "@opencode-ai/plugin";
 import { wf_state_read, wf_state_write } from "./tools/state-tools";
-import { wf_gate_check, wf_gate_record } from "./tools/gate-tools";
+import {
+  wf_gate_check,
+  wf_gate_record,
+  wf_gate_run,
+} from "./tools/gate-tools";
 import {
   wf_artifact_register,
   wf_hr_record,
@@ -46,6 +50,7 @@ const plugin: Plugin = async (input) => {
       wf_state_write,
       wf_gate_check,
       wf_gate_record,
+      wf_gate_run,
       wf_artifact_register,
       wf_hr_record,
       wf_feature_init,
@@ -147,6 +152,7 @@ const plugin: Plugin = async (input) => {
               "- `wf_state_write` — update stage status (start/complete/fail)",
               "- `wf_gate_check` — check stage preconditions",
               "- `wf_gate_record` — record gate results",
+              "- `wf_gate_run` — execute gate command with evidence",
               "- `wf_artifact_register` — register produced artifacts",
               "- `wf_hr_record` — record approval decisions",
               "",

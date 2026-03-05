@@ -16,6 +16,25 @@ For every workflow command the runtime pipeline is:
 5. Tools in `.opencode/tools/*.ts` update state, gates, approvals, and artifact metadata.
 6. State is persisted to `workflow/state/workflow_state.json`.
 
+## Runtime Stage-Exit Contract (Enforced in Code)
+
+When a stage is marked `complete` via `wf_state_write`, completion is now blocked unless all are true:
+
+1. At least one artifact is registered for the stage.
+2. At least one gate has status `passed` and has an evidence file path.
+3. For governed stages, approval decision is `approved`.
+
+Enforcement lives in code (not only in skill text):
+- `.opencode/contracts.ts`
+- `.opencode/tools/state-tools.ts`
+
+## Gate Execution Modes
+
+- `wf_gate_run` (preferred): runs a command, captures exit/stdout/stderr, writes evidence file, records gate result.
+- `wf_gate_record` (manual record): records status directly and still writes evidence metadata file.
+
+For deterministic quality checks, prefer `wf_gate_run`.
+
 ## Stage Commands (15)
 
 ### 1) `/wf.discover`
