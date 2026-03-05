@@ -72,3 +72,5 @@ See full list in `workflow/command-index.md`.
 ## Detailed Run Instructions
 
 Read `docs/RUNNING.md` for a complete setup and execution guide, including troubleshooting.
+
+For detailed command-by-command behavior and safe skill editing process, read `docs/COMMANDS_SKILLS.md`.
