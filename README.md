@@ -7,13 +7,17 @@ Project provides:
 - 6 service commands (`/wf.status`, `/wf.resume`, `/wf.gates`, `/wf.history`, `/wf.approve`, `/wf.reject`)
 - state persistence and stage gating
 - artifact tracking per feature/stage
-- HR approval checkpoints for governed stages
+- stage-exit contract with mandatory HR outcome + approval for completion
+- deterministic dispatch/runner runtime for stage 8/9 execution
+- task passport schema validation before dispatch
+- local/global skill collision resolver with interactive source selection
 
 ## What Is In This Repo
 
 - `opencode.json` - slash command definitions
 - `.opencode/plugin.ts` - plugin entry (tools + precommand gating hook)
-- `.opencode/tools/*.ts` - workflow tools (state, gates, artifacts, HR, feature init)
+- `.opencode/tools/*.ts` - workflow tools (state, gates, artifacts, HR, feature init, dispatch/runner, skill resolver)
+- `.opencode/skill-resolver.ts` - local/global skill resolution with collision handling
 - `.opencode/skill/wf-*/SKILL.md` - stage skills (15 stages)
 - `workflow/state/workflow_state.json` - workflow state file
 - `workflow/features/<feature-id>/<stage-id>/` - runtime artifacts
@@ -68,6 +72,8 @@ See full list in `workflow/command-index.md`.
 - `/wf.plan`
 - `/wf.tasks`
 - `/wf.tooling`
+
+All stages now require a recorded HR outcome before stage completion. Governed stages above additionally enforce HR approval as a transition checkpoint.
 
 ## Detailed Run Instructions
 

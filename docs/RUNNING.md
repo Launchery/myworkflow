@@ -98,6 +98,12 @@ Governed stages require approval before moving forward:
 - `tasks`
 - `tooling`
 
+Additionally, stage completion now enforces a stage-exit contract for every stage:
+- at least one registered artifact,
+- at least one passed gate with evidence,
+- recorded HR outcome,
+- approval decision for completion.
+
 Approval can happen inside stage flow (preferred), and service commands are available if needed:
 
 ```text
@@ -128,6 +134,8 @@ Use during execution:
 4. Let implementation run via dispatch + task passports.
 5. Complete review, QA, optional debug, and final report.
 
+For non-governed stages, approve stage outputs when stage-complete asks for HR decision.
+
 Artifacts for each stage appear under the feature directory.
 
 ## 9. Troubleshooting
@@ -149,6 +157,39 @@ Cause:
 Fix:
 - Run `/wf.status` and `/wf.gates`.
 - Complete/approve the required stage.
+
+### "Stage exit contract failed"
+
+Cause:
+- missing artifact registration, missing passed gate evidence, or missing HR approval before completion.
+
+Fix:
+- ensure stage artifact files are created and registered,
+- run gate commands via `wf_gate_run` (or record via `wf_gate_record`) with evidence,
+- record HR decision using `/wf.approve <stage>`.
+
+### "Skill name collision"
+
+Cause:
+- same stage skill exists in both local and global skill locations.
+
+Fix:
+- resolve source choice interactively via `wf_skill_resolve`:
+
+```text
+wf_skill_resolve({ "skill_name": "wf-discover", "choice": "local" })
+wf_skill_resolve({ "skill_name": "wf-discover", "choice": "global" })
+```
+
+Stored preference is reused for subsequent stage commands.
+
+### "Invalid task passport"
+
+Cause:
+- passport YAML does not satisfy `workflow/schemas/task-passport.schema.yaml`.
+
+Fix:
+- validate required fields (`task_id`, `goal`, `inputs`, `outputs`, `allowed_tools`, `gates`, `dod`, `owner_agent`) and rerun `/wf.dispatch`.
 
 ### Stage id errors on approve/reject
 
