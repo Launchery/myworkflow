@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import { join } from "path";
 import { tool } from "@opencode-ai/plugin/tool";
-import { readState, writeState } from "../state";
+import { readState, updateState } from "../state";
 import {
   checkStagePreconditions,
   formatGateCheckResult,
@@ -185,42 +185,73 @@ export const wf_gate_run = tool({
     const run = await runShellCommand(args.command, cwd, timeoutMs);
     const status = !run.timedOut && run.exitCode === 0 ? "passed" : "failed";
 
-    const evidencePayload = {
-      kind: "command-execution",
-      gate_name: args.gate_name,
-      stage_id: args.stage_id,
-      feature_id: featureId,
-      command: args.command,
-      cwd,
-      status,
-      exit_code: run.exitCode,
-      timed_out: run.timedOut,
-      started_at: run.startedAt,
-      finished_at: run.finishedAt,
-      duration_ms: run.durationMs,
-      stdout: run.stdout,
-      stderr: run.stderr,
-    };
+    const updateResult = await updateState(ctx.worktree, async (nextState) => {
+      const nextFeature = nextState.features[featureId];
+      if (!nextFeature) {
+        return {
+          success: false as const,
+          error: `Feature '${featureId}' not found`,
+        };
+      }
 
-    const evidencePath = await writeGateEvidence(
-      ctx.worktree,
-      featureId,
-      args.stage_id,
-      args.gate_name,
-      evidencePayload
-    );
+      const nextStage = nextFeature.stages[args.stage_id];
+      if (!nextStage) {
+        return {
+          success: false as const,
+          error: `Stage '${args.stage_id}' not started for feature '${featureId}'`,
+        };
+      }
 
-    stage.gates.push({
-      gate_name: args.gate_name,
-      status,
-      evidence_path: evidencePath,
-      timestamp: new Date().toISOString(),
-      method: "run",
-      command: args.command,
-      exit_code: run.exitCode,
+      const evidencePayload = {
+        kind: "command-execution",
+        gate_name: args.gate_name,
+        stage_id: args.stage_id,
+        feature_id: featureId,
+        command: args.command,
+        cwd,
+        status,
+        exit_code: run.exitCode,
+        timed_out: run.timedOut,
+        started_at: run.startedAt,
+        finished_at: run.finishedAt,
+        duration_ms: run.durationMs,
+        stdout: run.stdout,
+        stderr: run.stderr,
+      };
+
+      const evidencePath = await writeGateEvidence(
+        ctx.worktree,
+        featureId,
+        args.stage_id,
+        args.gate_name,
+        evidencePayload
+      );
+
+      nextStage.gates.push({
+        gate_name: args.gate_name,
+        status,
+        evidence_path: evidencePath,
+        timestamp: new Date().toISOString(),
+        method: "run",
+        command: args.command,
+        exit_code: run.exitCode,
+      });
+
+      return {
+        success: true as const,
+        evidencePath,
+      };
     });
 
-    await writeState(ctx.worktree, state);
+    if (!updateResult.success) {
+      return JSON.stringify({
+        error: updateResult.error,
+        exit_code: run.exitCode,
+        timed_out: run.timedOut,
+        stdout: run.stdout,
+        stderr: run.stderr,
+      });
+    }
 
     return JSON.stringify({
       success: true,
@@ -230,7 +261,7 @@ export const wf_gate_run = tool({
       feature_id: featureId,
       exit_code: run.exitCode,
       timed_out: run.timedOut,
-      evidence_path: evidencePath,
+      evidence_path: updateResult.evidencePath,
       stdout: run.stdout,
       stderr: run.stderr,
     });
@@ -261,55 +292,68 @@ export const wf_gate_record = tool({
       });
     }
 
-    const state = await readState(ctx.worktree);
-    const feature = state.features[args.feature_id];
+    const result = await updateState(ctx.worktree, async (state) => {
+      const feature = state.features[args.feature_id];
 
-    if (!feature) {
-      return JSON.stringify({
-        error: `Feature '${args.feature_id}' not found`,
+      if (!feature) {
+        return {
+          success: false as const,
+          error: `Feature '${args.feature_id}' not found`,
+        };
+      }
+
+      const stage = feature.stages[args.stage_id];
+      if (!stage) {
+        return {
+          success: false as const,
+          error: `Stage '${args.stage_id}' not started for feature '${args.feature_id}'`,
+        };
+      }
+
+      const evidencePath =
+        args.evidence_path ??
+        (await writeGateEvidence(
+          ctx.worktree,
+          args.feature_id,
+          args.stage_id,
+          args.gate_name,
+          {
+            kind: "manual-gate-record",
+            gate_name: args.gate_name,
+            stage_id: args.stage_id,
+            feature_id: args.feature_id,
+            status: args.status,
+            timestamp: new Date().toISOString(),
+          }
+        ));
+
+      stage.gates.push({
+        gate_name: args.gate_name,
+        status: args.status,
+        evidence_path: evidencePath,
+        timestamp: new Date().toISOString(),
+        method: "record",
+        command: null,
+        exit_code: null,
       });
-    }
 
-    const stage = feature.stages[args.stage_id];
-    if (!stage) {
-      return JSON.stringify({
-        error: `Stage '${args.stage_id}' not started for feature '${args.feature_id}'`,
-      });
-    }
-
-    const evidencePath =
-      args.evidence_path ??
-      (await writeGateEvidence(
-        ctx.worktree,
-        args.feature_id,
-        args.stage_id,
-        args.gate_name,
-        {
-          kind: "manual-gate-record",
-          gate_name: args.gate_name,
-          stage_id: args.stage_id,
-          feature_id: args.feature_id,
-          status: args.status,
-          timestamp: new Date().toISOString(),
-        }
-      ));
-
-    stage.gates.push({
-      gate_name: args.gate_name,
-      status: args.status,
-      evidence_path: evidencePath,
-      timestamp: new Date().toISOString(),
-      method: "record",
-      command: null,
-      exit_code: null,
+      return {
+        success: true as const,
+        evidencePath,
+      };
     });
 
-    await writeState(ctx.worktree, state);
+    if (!result.success) {
+      return JSON.stringify({
+        error: result.error,
+      });
+    }
+
     return JSON.stringify({
       success: true,
       gate: args.gate_name,
       status: args.status,
-      evidence_path: evidencePath,
+      evidence_path: result.evidencePath,
     });
   },
 });

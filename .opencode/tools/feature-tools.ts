@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin/tool";
-import { readState, writeState } from "../state";
+import { updateState } from "../state";
 import { mkdir } from "fs/promises";
 import { join } from "path";
 import type { FeatureRun } from "../types";
@@ -21,8 +21,6 @@ export const wf_feature_init = tool({
       ),
   },
   async execute(args, ctx) {
-    const state = await readState(ctx.worktree);
-
     const slug = args.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -31,23 +29,36 @@ export const wf_feature_init = tool({
     const date = new Date().toISOString().slice(0, 10);
     const featureId = args.feature_id ?? `${date}-${slug}`;
 
-    if (state.features[featureId]) {
+    const updateResult = await updateState(ctx.worktree, (state) => {
+      if (state.features[featureId]) {
+        return {
+          success: false as const,
+          error: `Feature '${featureId}' already exists. Use a different ID or title.`,
+        };
+      }
+
+      const feature: FeatureRun = {
+        feature_id: featureId,
+        title: args.title,
+        created_at: new Date().toISOString(),
+        status: "in_progress",
+        current_stage: "discover",
+        stages: {},
+      };
+
+      state.features[featureId] = feature;
+      state.active_feature = featureId;
+
+      return {
+        success: true as const,
+      };
+    });
+
+    if (!updateResult.success) {
       return JSON.stringify({
-        error: `Feature '${featureId}' already exists. Use a different ID or title.`,
+        error: updateResult.error,
       });
     }
-
-    const feature: FeatureRun = {
-      feature_id: featureId,
-      title: args.title,
-      created_at: new Date().toISOString(),
-      status: "in_progress",
-      current_stage: "discover",
-      stages: {},
-    };
-
-    state.features[featureId] = feature;
-    state.active_feature = featureId;
 
     // Create feature directory
     const featureDir = join(
@@ -58,7 +69,6 @@ export const wf_feature_init = tool({
     );
     await mkdir(featureDir, { recursive: true });
 
-    await writeState(ctx.worktree, state);
     return JSON.stringify({
       success: true,
       feature_id: featureId,

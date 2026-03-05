@@ -1,7 +1,7 @@
 import { tool } from "@opencode-ai/plugin/tool";
 import {
   readState,
-  writeState,
+  updateState,
   newStageExecution,
 } from "../state";
 import { isStageId, type StageId } from "../types";
@@ -78,87 +78,102 @@ export const wf_state_write = tool({
       .describe("Path to diagnostics file (for failed stages)"),
   },
   async execute(args, ctx) {
-    const state = await readState(ctx.worktree);
-    const feature = state.features[args.feature_id];
+    const result = await updateState(ctx.worktree, (state) => {
+      const feature = state.features[args.feature_id];
 
-    if (!feature) {
-      return JSON.stringify({
-        error: `Feature '${args.feature_id}' not found`,
-      });
-    }
-
-    if (args.action === "set_feature_status") {
-      if (!args.feature_status) {
-        return JSON.stringify({
-          error: "feature_status is required for set_feature_status action",
-        });
+      if (!feature) {
+        return {
+          success: false as const,
+          error: `Feature '${args.feature_id}' not found`,
+        };
       }
 
-      feature.status = args.feature_status;
-      await writeState(ctx.worktree, state);
-      return JSON.stringify({
-        success: true,
+      if (args.action === "set_feature_status") {
+        if (!args.feature_status) {
+          return {
+            success: false as const,
+            error: "feature_status is required for set_feature_status action",
+          };
+        }
+
+        feature.status = args.feature_status;
+        return {
+          success: true as const,
+          action: args.action,
+          feature: args.feature_id,
+          feature_status: args.feature_status,
+        };
+      }
+
+      if (!args.stage_id) {
+        return {
+          success: false as const,
+          error: "stage_id is required for start/complete/fail actions",
+        };
+      }
+
+      if (!isStageId(args.stage_id)) {
+        return {
+          success: false as const,
+          error: `Invalid stage '${args.stage_id}'`,
+        };
+      }
+
+      const stageId: StageId = args.stage_id;
+
+      if (args.action === "start") {
+        feature.stages[stageId] = newStageExecution(stageId);
+        feature.current_stage = stageId;
+      } else if (args.action === "complete") {
+        const stage = feature.stages[stageId];
+        if (!stage) {
+          return {
+            success: false as const,
+            error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
+          };
+        }
+
+        const validation = validateStageExit(feature, stageId);
+        if (!validation.ok) {
+          return {
+            success: false as const,
+            error: `Stage exit contract failed for '${stageId}'`,
+            violations: validation.errors,
+          };
+        }
+
+        stage.result = "completed";
+        stage.finished_at = new Date().toISOString();
+      } else if (args.action === "fail") {
+        const stage = feature.stages[stageId];
+        if (!stage) {
+          return {
+            success: false as const,
+            error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
+          };
+        }
+
+        stage.result = "failed";
+        stage.finished_at = new Date().toISOString();
+        stage.diagnostics_path = args.diagnostics_path ?? null;
+        feature.status = "failed";
+      }
+
+      return {
+        success: true as const,
         action: args.action,
+        stage: args.stage_id,
         feature: args.feature_id,
-        feature_status: args.feature_status,
-      });
-    }
-
-    if (!args.stage_id) {
-      return JSON.stringify({
-        error: "stage_id is required for start/complete/fail actions",
-      });
-    }
-
-    if (!isStageId(args.stage_id)) {
-      return JSON.stringify({
-        error: `Invalid stage '${args.stage_id}'`,
-      });
-    }
-
-    const stageId: StageId = args.stage_id;
-
-    if (args.action === "start") {
-      feature.stages[stageId] = newStageExecution(stageId);
-      feature.current_stage = stageId;
-    } else if (args.action === "complete") {
-      const stage = feature.stages[stageId];
-      if (!stage) {
-        return JSON.stringify({
-          error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
-        });
-      }
-
-      const validation = validateStageExit(feature, stageId);
-      if (!validation.ok) {
-        return JSON.stringify({
-          error: `Stage exit contract failed for '${stageId}'`,
-          violations: validation.errors,
-        });
-      }
-
-      stage.result = "completed";
-      stage.finished_at = new Date().toISOString();
-    } else if (args.action === "fail") {
-      const stage = feature.stages[stageId];
-      if (!stage) {
-        return JSON.stringify({
-          error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
-        });
-      }
-
-      stage.result = "failed";
-      stage.finished_at = new Date().toISOString();
-      stage.diagnostics_path = args.diagnostics_path ?? null;
-      feature.status = "failed";
-    }
-
-    await writeState(ctx.worktree, state);
-    return JSON.stringify({
-      success: true,
-      action: args.action,
-      stage: args.stage_id,
-      feature: args.feature_id,
+      };
     });
+
+    if (!result.success) {
+      return JSON.stringify({
+        error: result.error,
+        ...("violations" in result ? { violations: result.violations } : {}),
+      });
+    }
+
+    return JSON.stringify(result);
   },
 });

@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin/tool";
-import { readState, writeState } from "../state";
+import { readState, updateState } from "../state";
 import { createHash } from "crypto";
 import { readFile } from "fs/promises";
 import { join } from "path";
@@ -40,22 +40,6 @@ export const wf_artifact_register = tool({
       });
     }
 
-    const state = await readState(ctx.worktree);
-    const feature = state.features[args.feature_id];
-
-    if (!feature) {
-      return JSON.stringify({
-        error: `Feature '${args.feature_id}' not found`,
-      });
-    }
-
-    const stage = feature.stages[stageId];
-    if (!stage) {
-      return JSON.stringify({
-        error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
-      });
-    }
-
     // Compute checksum
     let checksum = "sha256:unknown";
     try {
@@ -71,14 +55,41 @@ export const wf_artifact_register = tool({
       // File might not exist yet or be binary
     }
 
-    stage.artifacts.push({
-      artifact_type: args.artifact_type,
-      path: args.path,
-      checksum,
-      generated_at: new Date().toISOString(),
+    const updateResult = await updateState(ctx.worktree, (state) => {
+      const feature = state.features[args.feature_id];
+      if (!feature) {
+        return {
+          success: false as const,
+          error: `Feature '${args.feature_id}' not found`,
+        };
+      }
+
+      const stage = feature.stages[stageId];
+      if (!stage) {
+        return {
+          success: false as const,
+          error: `Stage '${stageId}' not started for feature '${args.feature_id}'`,
+        };
+      }
+
+      stage.artifacts.push({
+        artifact_type: args.artifact_type,
+        path: args.path,
+        checksum,
+        generated_at: new Date().toISOString(),
+      });
+
+      return {
+        success: true as const,
+      };
     });
 
-    await writeState(ctx.worktree, state);
+    if (!updateResult.success) {
+      return JSON.stringify({
+        error: updateResult.error,
+      });
+    }
+
     return JSON.stringify({
       success: true,
       artifact_type: args.artifact_type,
@@ -121,29 +132,42 @@ export const wf_hr_record = tool({
       });
     }
 
-    const feature = state.features[featureId];
+    const updateResult = await updateState(ctx.worktree, (nextState) => {
+      const feature = nextState.features[featureId];
 
-    if (!feature) {
+      if (!feature) {
+        return {
+          success: false as const,
+          error: `Feature '${featureId}' not found`,
+        };
+      }
+
+      const stage = feature.stages[stageId];
+      if (!stage) {
+        return {
+          success: false as const,
+          error: `Stage '${stageId}' not started for feature '${featureId}'`,
+        };
+      }
+
+      stage.approval = {
+        decision: args.decision,
+        reviewer: "user",
+        timestamp: new Date().toISOString(),
+        notes: args.notes ?? "",
+      };
+
+      return {
+        success: true as const,
+      };
+    });
+
+    if (!updateResult.success) {
       return JSON.stringify({
-        error: `Feature '${featureId}' not found`,
+        error: updateResult.error,
       });
     }
 
-    const stage = feature.stages[stageId];
-    if (!stage) {
-      return JSON.stringify({
-        error: `Stage '${stageId}' not started for feature '${featureId}'`,
-      });
-    }
-
-    stage.approval = {
-      decision: args.decision,
-      reviewer: "user",
-      timestamp: new Date().toISOString(),
-      notes: args.notes ?? "",
-    };
-
-    await writeState(ctx.worktree, state);
     return JSON.stringify({
       success: true,
       stage: stageId,
