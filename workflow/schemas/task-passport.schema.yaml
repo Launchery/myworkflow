@@ -82,3 +82,8 @@ properties:
     type: string
     description: Which agent type executes this task
     default: general
+  depends_on:
+    type: array
+    description: Optional explicit dependency task IDs
+    items:
+      type: string

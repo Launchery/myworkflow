@@ -111,6 +111,12 @@ function normalizePath(value: string): string {
   return value.trim().replace(/\\/g, "/");
 }
 
+function basenameOf(pathValue: string): string {
+  const normalized = normalizePath(pathValue);
+  const idx = normalized.lastIndexOf("/");
+  return idx >= 0 ? normalized.slice(idx + 1) : normalized;
+}
+
 function defaultTasksDir(featureId: string): string {
   return `workflow/features/${featureId}/tasks`;
 }
@@ -363,6 +369,19 @@ async function loadTaskPassports(
   }
 
   const outputsByPath = new Map<string, string[]>();
+  const sourcePathToTaskId = new Map<string, string>();
+  const sourceNameToTaskIds = new Map<string, string[]>();
+
+  for (const task of tasks) {
+    const sourcePath = normalizePath(task.source_path);
+    sourcePathToTaskId.set(sourcePath, task.task_id);
+
+    const sourceName = basenameOf(sourcePath);
+    const sourceNameOwners = sourceNameToTaskIds.get(sourceName) ?? [];
+    sourceNameOwners.push(task.task_id);
+    sourceNameToTaskIds.set(sourceName, sourceNameOwners);
+  }
+
   for (const task of tasks) {
     for (const output of task.outputs) {
       const list = outputsByPath.get(output) ?? [];
@@ -373,6 +392,17 @@ async function loadTaskPassports(
 
   for (const task of tasks) {
     for (const inputPath of task.inputs) {
+      const directSourceTask = sourcePathToTaskId.get(inputPath);
+      if (directSourceTask && directSourceTask !== task.task_id) {
+        task.dependencies.push(directSourceTask);
+      }
+
+      const inputName = basenameOf(inputPath);
+      const sourceNameOwners = sourceNameToTaskIds.get(inputName) ?? [];
+      if (sourceNameOwners.length === 1 && sourceNameOwners[0] !== task.task_id) {
+        task.dependencies.push(sourceNameOwners[0]);
+      }
+
       const producers = outputsByPath.get(inputPath) ?? [];
       for (const producer of producers) {
         if (producer !== task.task_id) {

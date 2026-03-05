@@ -30,6 +30,7 @@ function passportYaml(input: {
   taskId: string;
   goal: string;
   inputs: string[];
+  dependsOn?: string[];
   outputs: Array<{ path: string; type: "create" | "modify" | "test" }>;
   gateCommand?: string;
 }): string {
@@ -50,9 +51,14 @@ function passportYaml(input: {
     )
     .join("\n");
 
+  const dependsOnBlock = Array.isArray(input.dependsOn) && input.dependsOn.length > 0
+    ? ["depends_on:", ...input.dependsOn.map((dep) => `  - "${dep}"`)]
+    : [];
+
   return [
     `task_id: "${input.taskId}"`,
     `goal: "${input.goal}"`,
+    ...dependsOnBlock,
     "inputs:",
     inputsBlock,
     "outputs:",
@@ -185,6 +191,103 @@ describe("deterministic dispatch builder", () => {
     const savedPlanRaw = await readFile(join(TEST_DIR, first.plan_path), "utf-8");
     const savedPlan = JSON.parse(savedPlanRaw);
     expect(savedPlan.waves.length).toBe(first.plan.waves.length);
+  });
+
+  test("infers dependencies from input task-passport paths", async () => {
+    const ctx = makeCtx(TEST_DIR);
+    const init = asJson(
+      await wf_feature_init.execute({ title: "Path Dependency Inference Feature" }, ctx)
+    );
+    const featureId = init.feature_id as string;
+
+    const upstreamFile = "task-001-upstream.yaml";
+    const downstreamFile = "task-002-downstream.yaml";
+
+    await writePassport(
+      TEST_DIR,
+      featureId,
+      upstreamFile,
+      passportYaml({
+        taskId: "task-001-upstream",
+        goal: "Create upstream task",
+        inputs: [],
+        outputs: [{ path: "src/upstream.ts", type: "create" }],
+      })
+    );
+
+    await writePassport(
+      TEST_DIR,
+      featureId,
+      downstreamFile,
+      passportYaml({
+        taskId: "task-002-downstream",
+        goal: "Depends on upstream passport path",
+        inputs: [
+          `workflow/features/${featureId}/tasks/${upstreamFile}`,
+        ],
+        outputs: [{ path: "src/downstream.ts", type: "create" }],
+      })
+    );
+
+    const dispatch = asJson(await wf_dispatch_build.execute({ feature_id: featureId }, ctx));
+    expect(dispatch.success).toBe(true);
+
+    const tasks = dispatch.plan.tasks as Array<{ task_id: string; dependencies: string[] }>;
+    const downstream = tasks.find((t) => t.task_id === "task-002-downstream");
+    expect(downstream).toBeDefined();
+    expect(downstream!.dependencies).toContain("task-001-upstream");
+
+    const waveByTask = new Map<string, number>();
+    for (const wave of dispatch.plan.waves as Array<{ index: number; task_ids: string[] }>) {
+      for (const taskId of wave.task_ids) {
+        waveByTask.set(taskId, wave.index);
+      }
+    }
+
+    expect(waveByTask.get("task-001-upstream")! < waveByTask.get("task-002-downstream")!).toBe(
+      true
+    );
+  });
+
+  test("accepts explicit depends_on dependencies", async () => {
+    const ctx = makeCtx(TEST_DIR);
+    const init = asJson(
+      await wf_feature_init.execute({ title: "Explicit Depends On Feature" }, ctx)
+    );
+    const featureId = init.feature_id as string;
+
+    await writePassport(
+      TEST_DIR,
+      featureId,
+      "task-001-base.yaml",
+      passportYaml({
+        taskId: "task-001-base",
+        goal: "Base task",
+        inputs: [],
+        outputs: [{ path: "src/base.ts", type: "create" }],
+      })
+    );
+
+    await writePassport(
+      TEST_DIR,
+      featureId,
+      "task-002-dependent.yaml",
+      passportYaml({
+        taskId: "task-002-dependent",
+        goal: "Depends on base through explicit depends_on",
+        inputs: [],
+        dependsOn: ["task-001-base"],
+        outputs: [{ path: "src/dependent.ts", type: "create" }],
+      })
+    );
+
+    const dispatch = asJson(await wf_dispatch_build.execute({ feature_id: featureId }, ctx));
+    expect(dispatch.success).toBe(true);
+
+    const tasks = dispatch.plan.tasks as Array<{ task_id: string; dependencies: string[] }>;
+    const dependent = tasks.find((t) => t.task_id === "task-002-dependent");
+    expect(dependent).toBeDefined();
+    expect(dependent!.dependencies).toContain("task-001-base");
   });
 
   test("rejects passports that violate required schema fields", async () => {
