@@ -1,0 +1,88 @@
+{
+  "command": {
+    "wf.discover": {
+      "template": "Execute Stage 1: Discovery. Load and follow the wf-discover skill. Use wf_state_read to check state first. If no active feature exists, use wf_feature_init to create one. Then conduct a deep discovery interview to produce project-concept.md.",
+      "description": "Stage 1: Discovery — deep interview to produce project-concept.md"
+    },
+    "wf.spike": {
+      "template": "Execute Stage 2: Spike. Load and follow the wf-spike skill. Use wf_state_read to check state. Validate key technical assumptions and produce spike-report.md.",
+      "description": "Stage 2: Spike — validate technical assumptions"
+    },
+    "wf.arch": {
+      "template": "Execute Stage 3: Architecture. Load and follow the wf-arch skill. Use wf_state_read to check state. Design architecture and produce architecture.md and decisions.md. This is a governed stage — HR approval required.",
+      "description": "Stage 3: Architecture — design and HR approval"
+    },
+    "wf.spec": {
+      "template": "Execute Stage 4: Specification. Load and follow the wf-spec skill. Use wf_state_read to check state. Create detailed specification with acceptance criteria. This is a governed stage — HR approval required.",
+      "description": "Stage 4: Specification — detailed spec with acceptance criteria"
+    },
+    "wf.plan": {
+      "template": "Execute Stage 5: Plan. Load and follow the wf-plan skill. Use wf_state_read to check state. Create implementation plan with tasks and dependencies. This is a governed stage — HR approval required.",
+      "description": "Stage 5: Plan — implementation plan with tasks"
+    },
+    "wf.tasks": {
+      "template": "Execute Stage 6: Tasks. Load and follow the wf-tasks skill. Use wf_state_read to check state. Generate ABI task passports with goal, inputs, outputs, gates, and DoD. This is a governed stage — HR approval required.",
+      "description": "Stage 6: Tasks — generate ABI task passports"
+    },
+    "wf.tooling": {
+      "template": "Execute Stage 7: Tooling. Load and follow the wf-tooling skill. Use wf_state_read to check state. Execute the 5-step tooling mini-workflow: stack inference, web research, setup synthesis, capability check, HR review.",
+      "description": "Stage 7: Tooling — stack inference, research, setup, verify"
+    },
+    "wf.dispatch": {
+      "template": "Execute Stage 8: Dispatch. Load and follow the wf-dispatch skill. Use wf_state_read to check state. Analyze task passports and create dispatch plan with parallelism strategy.",
+      "description": "Stage 8: Dispatch — plan subagent task execution"
+    },
+    "wf.implement": {
+      "template": "Execute Stage 9: Implement. Load and follow the wf-implement skill. Use wf_state_read to check state. Execute SDD+TDD: dispatch subagents by task passports, enforce test-first and mandatory gates.",
+      "description": "Stage 9: Implement — SDD+TDD execution via subagents"
+    },
+    "wf.review": {
+      "template": "Execute Stage 10: Review. Load and follow the wf-review skill. Use wf_state_read to check state. Conduct code review: structural analysis, consistency, test coverage.",
+      "description": "Stage 10: Review — code review and analysis"
+    },
+    "wf.finish-branch": {
+      "template": "Execute Stage 11: Finish Branch. Load and follow the wf-finish-branch skill. Use wf_state_read to check state. Finalize development branch: cleanup, squash/rebase, PR prep.",
+      "description": "Stage 11: Finish Branch — finalize dev branch"
+    },
+    "wf.project-report": {
+      "template": "Execute Stage 12: Project Report. Load and follow the wf-project-report skill. Use wf_state_read to check state. Generate skill-report.md and human-qa-plan.md.",
+      "description": "Stage 12: Project Report — generate skill-report.md and QA plan"
+    },
+    "wf.human-qa": {
+      "template": "Execute Stage 13: Human QA. Load and follow the wf-human-qa skill. Use wf_state_read to check state. Guide user through smoke + critical-path QA on localhost.",
+      "description": "Stage 13: Human QA — guided localhost testing"
+    },
+    "wf.debug": {
+      "template": "Execute Stage 14: Debug. Load and follow the wf-debug skill. Use wf_state_read to check state. Run bounded debug loop: diagnose, fix, verify. Max 5 iterations.",
+      "description": "Stage 14: Debug — bounded debug loop"
+    },
+    "wf.finish-report": {
+      "template": "Execute Stage 15: Finish Report. Load and follow the wf-finish-report skill. Use wf_state_read to check state. Generate final executive report summarizing what was built.",
+      "description": "Stage 15: Finish Report — executive summary"
+    },
+    "wf.status": {
+      "template": "Show the current workflow status. Use wf_state_read to read the full state. Present a clear summary: active feature, current stage, gate statuses, approval statuses, and next available command.",
+      "description": "Service: Show current workflow status"
+    },
+    "wf.resume": {
+      "template": "Resume the workflow from the last interruption point. Use wf_state_read to find the last stage with result 'failed' or 'in_progress'. Restore context from artifacts and state, then continue execution of that stage.",
+      "description": "Service: Resume from last interruption"
+    },
+    "wf.gates": {
+      "template": "Show all gate statuses for the active feature. Use wf_state_read to read state. Present a table of all stages with their gate check results, approval statuses, and any missing preconditions.",
+      "description": "Service: Show gate statuses"
+    },
+    "wf.history": {
+      "template": "Show the history of feature runs. Use wf_state_read to read the full state. Present all features with their status, stages completed, and timestamps.",
+      "description": "Service: Show feature run history"
+    },
+    "wf.approve": {
+      "template": "Manually approve a workflow stage. The user will specify which stage. Use wf_hr_record to record the approval. Args: stage name.",
+      "description": "Service: Manually approve a stage"
+    },
+    "wf.reject": {
+      "template": "Manually reject a workflow stage. The user will specify which stage and reason. Use wf_hr_record to record the rejection. Args: stage name, reason.",
+      "description": "Service: Manually reject a stage"
+    }
+  }
+}

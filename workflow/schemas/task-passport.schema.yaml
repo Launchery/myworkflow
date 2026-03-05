@@ -1,0 +1,84 @@
+# Task Passport Schema v1.0
+# Each task dispatched to a subagent must conform to this schema
+
+type: object
+additionalProperties: false
+required:
+  - task_id
+  - goal
+  - inputs
+  - outputs
+  - allowed_tools
+  - gates
+  - dod
+  - owner_agent
+properties:
+  task_id:
+    type: string
+    description: Unique identifier for this task
+    pattern: "^[a-z0-9-]+$"
+  goal:
+    type: string
+    description: What this task achieves (one sentence)
+  inputs:
+    type: array
+    description: Files and artifacts needed to execute this task
+    items:
+      type: object
+      additionalProperties: false
+      required: [path, description]
+      properties:
+        path:
+          type: string
+        description:
+          type: string
+  outputs:
+    type: array
+    description: Files this task will produce or modify
+    items:
+      type: object
+      additionalProperties: false
+      required: [path, type]
+      properties:
+        path:
+          type: string
+        type:
+          type: string
+          enum: [create, modify, test]
+  allowed_tools:
+    type: array
+    description: Tools the subagent is permitted to use
+    items:
+      type: object
+      additionalProperties: false
+      required: [tool_name]
+      properties:
+        tool_name:
+          type: string
+  gates:
+    type: array
+    description: Quality gates that must pass
+    items:
+      type: object
+      additionalProperties: false
+      required: [name, check]
+      properties:
+        name:
+          type: string
+        check:
+          type: string
+          description: Command or validation to run
+  dod:
+    type: array
+    description: Definition of Done criteria
+    items:
+      type: object
+      additionalProperties: false
+      required: [criterion]
+      properties:
+        criterion:
+          type: string
+  owner_agent:
+    type: string
+    description: Which agent type executes this task
+    default: general

@@ -1,0 +1,13 @@
+{
+  "name": "myworkflow-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "plugin.ts",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.2.16"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.7.0"
+  }
+}
