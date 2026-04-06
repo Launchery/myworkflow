@@ -19,10 +19,10 @@
 - [ ] Troubleshooting FAQ
 
 ## v1.2 — Workflow Examples
-- [ ] Example: greenfield project workflow (all 15 stages)
-- [ ] Example: bugfix workflow (skip to dispatch)
-- [ ] Example: refactor workflow (start from arch)
-- [ ] Example: multi-contributor workflow
+- [x] Example: greenfield project workflow (all 15 stages)
+- [x] Example: bugfix workflow (focused regression path)
+- [x] Example: refactor workflow (start from arch)
+- [x] Example: multi-contributor workflow
 - [ ] Example: CI/CD integration
 
 ## v2.0 — Extensibility

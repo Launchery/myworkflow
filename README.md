@@ -80,3 +80,14 @@ All stages now require a recorded HR outcome before stage completion. Governed s
 Read `docs/RUNNING.md` for a complete setup and execution guide, including troubleshooting.
 
 For detailed command-by-command behavior and safe skill editing process, read `docs/COMMANDS_SKILLS.md`.
+
+## Workflow Examples
+
+Practical examples now live in `docs/examples/`:
+
+- `greenfield-cli-tool.md`
+- `bugfix-regression.md`
+- `refactor-command-router.md`
+- `multi-contributor-handoff.md`
+
+Start with `docs/examples/README.md` to choose the closest scenario.

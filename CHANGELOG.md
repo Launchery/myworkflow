@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Workflow examples for greenfield, bugfix, refactor, and multi-contributor handoff scenarios
+- Example index in `docs/examples/README.md`
+
 ## [1.0.0] - 2026-04-04
 
 ### Added
