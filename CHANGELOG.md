@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-04-06
 
 ### Added
 - **Custom stage definitions** — define project-specific workflow stages beyond the built-in 15
@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `wf_template_apply` — apply a template (security gate, perf benchmark, staging deploy, etc.)
   - Categories: quality, security, deployment, documentation, testing, compliance
   - Templates: security-review, perf-benchmark, a11y-audit, staging-deploy, compliance-check, docs-generation, integration-test, release-prep
+- **Workflow report exporter** — export feature reports as Markdown or HTML
+  - Stage timeline with status icons and duration
+  - Gate issue summary
+  - Artifact listing with stage attribution
+  - HTML output with styled template
+
+## [1.1.0] - 2026-04-06
+
+### Added
 - One-liner setup script (`scripts/setup.sh`)
 - Improved quickstart with "First workflow in 60 seconds" guide
 - Workflow examples for greenfield, bugfix, refactor, and multi-contributor handoff scenarios
@@ -41,14 +50,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slash command definitions (opencode.json)
 - Stage skills with SKILL.md for each workflow stage
 - Documentation: RUNNING.md, COMMANDS_SKILLS.md
-
-## [Unreleased]
-
-### Added
-- Workflow report exporter tool (`wf_report_export`): generate Markdown or HTML reports for any feature
-  - Stage timeline with status icons and duration
-  - Gate issue summary (failed/skipped gates)
-  - Artifact listing with stage attribution
-  - Progress metrics (completed/failed/skipped/total)
-  - HTML output with styled report template
-  - Optional file output via `output_path` argument
