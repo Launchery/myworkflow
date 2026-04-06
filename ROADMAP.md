@@ -13,9 +13,9 @@
 
 ## v1.1 — Polish & DX
 - [ ] Demo GIF / screenshots for README
-- [ ] GitHub Actions CI (type-check + test)
-- [ ] Installation script / one-liner
-- [ ] More detailed quickstart with example project
+- [x] GitHub Actions CI (type-check + test)
+- [x] Installation script / one-liner (`scripts/setup.sh`)
+- [x] More detailed quickstart with "First workflow in 60 seconds"
 - [ ] Troubleshooting FAQ
 
 ## v1.2 — Workflow Examples
@@ -29,7 +29,7 @@
 - [ ] Custom stage definitions (user-defined stages)
 - [ ] Stage templates library
 - [ ] Web UI for workflow visualization
-- [ ] Export workflow reports as Markdown/HTML
+- [x] Export workflow reports as Markdown/HTML
 - [ ] Integration with GitHub Issues / Projects
 - [ ] Multiple concurrent features support
 

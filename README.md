@@ -82,6 +82,7 @@ Stage commands:
 
 Service commands:
 - `/wf.status`, `/wf.resume`, `/wf.gates`, `/wf.history`, `/wf.approve <stage>`, `/wf.reject <stage>`
+- `/wf.report-export <feature-id> [--format markdown|html] [--output <path>]`
 
 See full list in `workflow/command-index.md`.
 

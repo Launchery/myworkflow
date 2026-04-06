@@ -29,3 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Slash command definitions (opencode.json)
 - Stage skills with SKILL.md for each workflow stage
 - Documentation: RUNNING.md, COMMANDS_SKILLS.md
+
+## [Unreleased]
+
+### Added
+- Workflow report exporter tool (`wf_report_export`): generate Markdown or HTML reports for any feature
+  - Stage timeline with status icons and duration
+  - Gate issue summary (failed/skipped gates)
+  - Artifact listing with stage attribution
+  - Progress metrics (completed/failed/skipped/total)
+  - HTML output with styled report template
+  - Optional file output via `output_path` argument
