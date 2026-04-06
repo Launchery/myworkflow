@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Custom stages support `position` hints (`before:X` / `after:X`) for pipeline ordering
   - Dynamic slash commands: `/wf.<custom-id>` for each custom stage
   - Custom stage config persisted in `workflow/custom-stages.json`
+- **Stage templates library** — 8 pre-built templates for common extensions
+  - `wf_template_list` — browse templates by category
+  - `wf_template_apply` — apply a template (security gate, perf benchmark, staging deploy, etc.)
+  - Categories: quality, security, deployment, documentation, testing, compliance
+  - Templates: security-review, perf-benchmark, a11y-audit, staging-deploy, compliance-check, docs-generation, integration-test, release-prep
 - One-liner setup script (`scripts/setup.sh`)
 - Improved quickstart with "First workflow in 60 seconds" guide
 - Workflow examples for greenfield, bugfix, refactor, and multi-contributor handoff scenarios

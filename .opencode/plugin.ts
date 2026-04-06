@@ -23,6 +23,10 @@ import {
   wf_custom_stage_list,
   wf_custom_stage_remove,
 } from "./tools/custom-stage-tools";
+import {
+  wf_template_list,
+  wf_template_apply,
+} from "./tools/template-tools";
 import { readState, getActiveFeature } from "./state";
 import {
   checkStagePreconditions,
@@ -84,6 +88,8 @@ const plugin: Plugin = async (input) => {
       wf_custom_stage_define,
       wf_custom_stage_list,
       wf_custom_stage_remove,
+      wf_template_list,
+      wf_template_apply,
     },
 
     // Intercept /wf.* commands to inject context and check preconditions

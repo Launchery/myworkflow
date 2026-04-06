@@ -27,7 +27,7 @@
 
 ## v2.0 — Extensibility
 - [x] Custom stage definitions (user-defined stages)
-- [ ] Stage templates library
+- [x] Stage templates library
 - [ ] Web UI for workflow visualization
 - [x] Export workflow reports as Markdown/HTML
 - [ ] Integration with GitHub Issues / Projects

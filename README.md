@@ -175,3 +175,23 @@ By default, custom stages are placed after their last `after` dependency. Use `p
 
 - `"position": "before:review"` — insert before the `review` stage
 - `"position": "after:implement"` — insert right after `implement`
+
+### Stage Templates
+
+8 pre-built templates for common workflow extensions:
+
+| Template | Category | Stages | Description |
+|----------|----------|--------|-------------|
+| `security-gate` | security | 1 | Security review after code review |
+| `perf-benchmark` | testing | 1 | Performance benchmarking |
+| `accessibility-check` | quality | 1 | WCAG 2.1 accessibility audit |
+| `staging-deploy` | deployment | 2 | Staging deploy + verification |
+| `compliance-check` | compliance | 1 | GDPR/HIPAA/SOC2 review |
+| `docs-generation` | documentation | 1 | Auto-generate docs from code |
+| `integration-test` | testing | 1 | Integration & E2E testing |
+| `release-prep` | deployment | 1 | Version bump + release notes |
+
+```text
+wf_template_list({ category: "security" })
+wf_template_apply({ template_id: "security-gate" })
+```
