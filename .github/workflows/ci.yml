@@ -1,0 +1,26 @@
+name: Docs Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Markdown files exist
+        run: |
+          test -f README.md || (echo "Missing README.md" && exit 1)
+          test -f LICENSE || (echo "Missing LICENSE" && exit 1)
+      - name: Check for broken internal links
+        run: |
+          grep -roh '\[.*\](\.[^)]*\.md)' README.md 2>/dev/null | while read link; do
+            file=$(echo "$link" | sed 's/\[.*\](\(.*\))/\1/' | sed 's/#.*//')
+            if [ -n "$file" ] && [ ! -f "$file" ]; then
+              echo "Broken link: $file"
+              exit 1
+            fi
+          done
