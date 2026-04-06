@@ -112,3 +112,66 @@ Practical examples now live in `docs/examples/`:
 - `multi-contributor-handoff.md`
 
 Start with `docs/examples/README.md` to choose the closest scenario.
+
+## Custom Stages (v2.0)
+
+Extend the built-in 15 stages with project-specific steps.
+
+### Define a custom stage
+
+```text
+wf_custom_stage_define({
+  id: "security-review",
+  name: "Security Review",
+  description: "Review code for security vulnerabilities before merging",
+  after: ["review"],
+  governed: true,
+  skills: ["wf-security-review"],
+  artifacts: ["security-report"]
+})
+```
+
+This creates a new `/wf.security-review` command that:
+- Runs after the built-in `review` stage
+- Requires HR approval (governed)
+- Expects a `wf-security-review` skill and produces a `security-report` artifact
+
+### List custom stages
+
+```text
+wf_custom_stage_list()
+```
+
+### Remove a custom stage
+
+```text
+wf_custom_stage_remove({ id: "security-review" })
+```
+
+### Configuration
+
+Custom stages are stored in `workflow/custom-stages.json`. Example:
+
+```json
+{
+  "version": "1.0",
+  "stages": [
+    {
+      "id": "security-review",
+      "name": "Security Review",
+      "description": "Review code for security vulnerabilities",
+      "after": ["review"],
+      "governed": true,
+      "skills": [],
+      "artifacts": ["security-report"]
+    }
+  ]
+}
+```
+
+### Positioning
+
+By default, custom stages are placed after their last `after` dependency. Use `position` for explicit ordering:
+
+- `"position": "before:review"` — insert before the `review` stage
+- `"position": "after:implement"` — insert right after `implement`

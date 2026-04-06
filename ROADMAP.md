@@ -26,7 +26,7 @@
 - [ ] Example: CI/CD integration
 
 ## v2.0 — Extensibility
-- [ ] Custom stage definitions (user-defined stages)
+- [x] Custom stage definitions (user-defined stages)
 - [ ] Stage templates library
 - [ ] Web UI for workflow visualization
 - [x] Export workflow reports as Markdown/HTML

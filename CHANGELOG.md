@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Custom stage definitions** — define project-specific workflow stages beyond the built-in 15
+  - `wf_custom_stage_define` — add custom stages with preconditions, governance, skills, artifacts
+  - `wf_custom_stage_list` — list all custom stages
+  - `wf_custom_stage_remove` — remove a custom stage
+  - Custom stages support `position` hints (`before:X` / `after:X`) for pipeline ordering
+  - Dynamic slash commands: `/wf.<custom-id>` for each custom stage
+  - Custom stage config persisted in `workflow/custom-stages.json`
 - One-liner setup script (`scripts/setup.sh`)
 - Improved quickstart with "First workflow in 60 seconds" guide
 - Workflow examples for greenfield, bugfix, refactor, and multi-contributor handoff scenarios

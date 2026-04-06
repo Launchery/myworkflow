@@ -18,6 +18,11 @@ import {
   wf_runner_status,
 } from "./tools/dispatch-tools";
 import { wf_skill_resolve } from "./tools/skill-tools";
+import {
+  wf_custom_stage_define,
+  wf_custom_stage_list,
+  wf_custom_stage_remove,
+} from "./tools/custom-stage-tools";
 import { readState, getActiveFeature } from "./state";
 import {
   checkStagePreconditions,
@@ -27,6 +32,7 @@ import {
 import { resolveSkill } from "./skill-resolver";
 import type { StageId } from "./types";
 import { STAGE_ORDER } from "./types";
+import { readCustomStages, mergeStageOrder } from "./custom-stages";
 
 // Map slash command names to stage IDs
 const COMMAND_TO_STAGE: Record<string, StageId> = {
@@ -75,14 +81,32 @@ const plugin: Plugin = async (input) => {
       wf_runner_mark,
       wf_runner_status,
       wf_skill_resolve,
+      wf_custom_stage_define,
+      wf_custom_stage_list,
+      wf_custom_stage_remove,
     },
 
     // Intercept /wf.* commands to inject context and check preconditions
     "command.execute.before": async (cmdInput, output) => {
       const command = cmdInput.command;
 
-      // Only handle workflow stage commands
-      const stageId = COMMAND_TO_STAGE[command];
+      // Check built-in command map first
+      let stageId = COMMAND_TO_STAGE[command];
+
+      // Check custom stages if not a built-in command
+      if (!stageId && command.startsWith("wf.")) {
+        const customId = command.slice(3); // strip "wf."
+        try {
+          const config = await readCustomStages(input.worktree);
+          const customStage = config.stages.find((s) => s.id === customId);
+          if (customStage) {
+            stageId = customId as StageId;
+          }
+        } catch {
+          // ignore read errors for custom stages
+        }
+      }
+
       if (!stageId) return;
 
       const skillName = `wf-${stageId}`;
