@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- One-liner setup script (`scripts/setup.sh`)
+- Improved quickstart with "First workflow in 60 seconds" guide
 - Workflow examples for greenfield, bugfix, refactor, and multi-contributor handoff scenarios
 - Example index in `docs/examples/README.md`
 

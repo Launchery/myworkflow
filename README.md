@@ -26,6 +26,14 @@ Project provides:
 
 ## Quick Start
 
+### One-liner setup
+
+```bash
+git clone https://github.com/Launchery/myworkflow.git && cd myworkflow && bash scripts/setup.sh
+```
+
+### Manual setup
+
 1) Install prerequisites:
 - OpenCode CLI (with plugin/skill support)
 - Node.js 18+
@@ -54,6 +62,18 @@ bun test
 ```
 
 Then continue through stages in order.
+
+### First workflow in 60 seconds
+
+```text
+1. /wf.discover      → define what you're building
+2. /wf.arch          → pick the architecture approach  
+3. /wf.implement     → write the code (stage 8/9 dispatch)
+4. /wf.review        → human review gate
+5. /wf.finish-report → summary and wrap-up
+```
+
+See [docs/examples/](docs/examples/) for full walkthroughs of common scenarios.
 
 ## Command Groups
 
